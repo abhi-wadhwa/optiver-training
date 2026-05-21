@@ -30,7 +30,7 @@ export default function ReviewPage() {
   // Also find exercises by scanning all days for matching tags
   for (const { topic } of weakTopics) {
     for (const day of allDays) {
-      const allEx = [...day.exercises, ...day.cumulativeExercises];
+      const allEx = [...day.exercises, ...day.cumulativeExercises, ...(day.trackB?.exercises ?? [])];
       for (const ex of allEx) {
         if (!seenIds.has(ex.id) && ex.tags.some((t) => t.includes(topic) || topic.includes(t))) {
           seenIds.add(ex.id);

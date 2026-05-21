@@ -85,6 +85,7 @@ export function Sidebar() {
                   active={pathname === `/day/${day}`}
                   collapsed={collapsed}
                   completion={completion}
+                  hasTrackB={!!content?.trackB}
                 />
               );
             })}
@@ -114,6 +115,7 @@ export function Sidebar() {
                   active={pathname === `/day/${day}`}
                   collapsed={collapsed}
                   completion={completion}
+                  hasTrackB={!!content?.trackB}
                 />
               );
             })}
@@ -153,6 +155,7 @@ function NavItem({
   active,
   collapsed,
   completion,
+  hasTrackB,
 }: {
   href: string;
   icon: React.ReactNode;
@@ -160,6 +163,7 @@ function NavItem({
   active: boolean;
   collapsed: boolean;
   completion?: number;
+  hasTrackB?: boolean;
 }) {
   return (
     <Link
@@ -175,6 +179,11 @@ function NavItem({
       {icon}
       {!collapsed && (
         <span className="flex-1 truncate">{label}</span>
+      )}
+      {!collapsed && hasTrackB && (
+        <span className="rounded bg-purple-100 px-1 text-[10px] font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+          A+B
+        </span>
       )}
       {!collapsed && completion !== undefined && completion > 0 && (
         <span

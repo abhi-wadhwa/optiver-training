@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
-import { Clock, Flame, Target, Trophy } from 'lucide-react';
+import { Clock, Flame, Target, Trophy, Brain } from 'lucide-react';
 import type { DayContent } from '@/content/types';
 
 export default function Dashboard() {
@@ -18,9 +18,10 @@ export default function Dashboard() {
   const week2 = getDaysForWeek(2);
 
   const totalExercises = allDays.reduce(
-    (sum, d) => sum + d.exercises.length + d.cumulativeExercises.length,
+    (sum, d) => sum + d.exercises.length + d.cumulativeExercises.length + (d.trackB?.exercises.length ?? 0),
     0
   );
+  const trackBDaysCount = allDays.filter((d) => d.trackB).length;
   const completedExercises = Object.values(days).reduce((sum, day) => {
     return (
       sum +
@@ -43,12 +44,11 @@ export default function Dashboard() {
           Options Pricing Mastery
         </h1>
         <p className="mt-2 text-muted-foreground">
-          14-day intensive training based on Natenberg&apos;s Option Volatility
-          and Pricing
+          14-day dual-track training: Options Pricing (Track A) &amp; Quantitative Methods (Track B)
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           icon={<Target className="h-4 w-4" />}
           label="Overall Progress"
@@ -73,6 +73,14 @@ export default function Dashboard() {
           value={`${Object.values(days).filter((d) => d.theoryCompleted).length}/14`}
           sub="Theory sections read"
         />
+        {trackBDaysCount > 0 && (
+          <StatCard
+            icon={<Brain className="h-4 w-4" />}
+            label="Track B Progress"
+            value={`${Object.values(days).filter((d) => d.theoryCompletedB).length}/${trackBDaysCount}`}
+            sub="Quant methods tracks"
+          />
+        )}
       </div>
 
       <div className="space-y-6">
@@ -139,9 +147,16 @@ function WeekSection({
               <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-xs">
-                      Day {day.dayNumber}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        Day {day.dayNumber}
+                      </Badge>
+                      {day.trackB && (
+                        <Badge className="bg-purple-100 text-purple-800 text-xs border-0">
+                          A+B
+                        </Badge>
+                      )}
+                    </div>
                     {completion >= 80 && (
                       <Badge className="bg-green-100 text-green-800 text-xs">
                         Mastered

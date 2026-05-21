@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getDay, allDays } from '@/content/index';
-import { useProgressStore, getDayProgress, getDayCompletionPercent, EMPTY_DAY_PROGRESS } from '@/stores/progress-store';
+import { useProgressStore, getDayProgress, getDayCompletionPercent } from '@/stores/progress-store';
 import TheoryRenderer from '@/components/content/TheoryRenderer';
 import ExerciseRenderer from '@/components/exercises/ExerciseRenderer';
 import FlashcardDeck from '@/components/practice/FlashcardDeck';
@@ -24,12 +24,15 @@ import 'katex/dist/katex.min.css';
 import type { CheatSheetEntry } from '@/content/types';
 import katex from 'katex';
 import { useRef, useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
   const day = getDay(dayNumber);
   const markTheoryComplete = useProgressStore((s) => s.markTheoryComplete);
+  const markTheoryCompleteB = useProgressStore((s) => s.markTheoryCompleteB);
   const days = useProgressStore((s) => s.days);
   const dayProgress = getDayProgress(days, dayNumber);
+  const [activeTrack, setActiveTrack] = useState<'A' | 'B'>('A');
 
   if (!day) {
     return (
@@ -45,26 +48,72 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
     );
   }
 
-  const totalExercises = day.exercises.length + day.cumulativeExercises.length;
-  const completionPercent = getDayCompletionPercent(days, dayNumber, totalExercises);
+  const hasTrackB = !!day.trackB;
+  const isTrackB = activeTrack === 'B' && hasTrackB;
+
+  const theory = isTrackB ? day.trackB!.theory : day.theory;
+  const exercises = isTrackB ? day.trackB!.exercises : [...day.exercises, ...day.cumulativeExercises];
+  const flashcards = isTrackB ? day.trackB!.flashcards : day.flashcards;
+  const cheatSheet = isTrackB ? day.trackB!.cheatSheet : day.cheatSheet;
+  const summary = isTrackB ? day.trackB!.summary : day.summary;
+  const objectives = isTrackB ? day.trackB!.objectives : day.objectives;
+  const title = isTrackB ? day.trackB!.title : day.title;
+  const subtitle = isTrackB ? day.trackB!.subtitle : day.subtitle;
+  const theoryCompleted = isTrackB ? dayProgress.theoryCompletedB : dayProgress.theoryCompleted;
+
+  const totalExercises = exercises.length;
+  const completionPercent = getDayCompletionPercent(days, dayNumber, day.exercises.length + day.cumulativeExercises.length);
   const prevDay = allDays.find((d) => d.dayNumber === dayNumber - 1);
   const nextDay = allDays.find((d) => d.dayNumber === dayNumber + 1);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
+      {/* Track Toggle */}
+      {hasTrackB && (
+        <div className="mb-6 flex items-center gap-1 rounded-lg border bg-muted/50 p-1">
+          <button
+            onClick={() => setActiveTrack('A')}
+            className={cn(
+              'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors',
+              activeTrack === 'A'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Track A: Options Pricing
+          </button>
+          <button
+            onClick={() => setActiveTrack('B')}
+            className={cn(
+              'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors',
+              activeTrack === 'B'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Track B: Quant Methods
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <div className="mb-2 flex items-center gap-2">
           <Badge variant="secondary">Week {day.week}</Badge>
           <Badge variant="outline">Day {day.dayNumber}</Badge>
-          {dayProgress.theoryCompleted && (
+          {isTrackB && (
+            <Badge className="border-0 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+              Track B
+            </Badge>
+          )}
+          {theoryCompleted && (
             <Badge className="border-0 bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">
               Theory Complete
             </Badge>
           )}
         </div>
-        <h1 className="mb-1 text-3xl font-bold">{day.title}</h1>
-        <p className="mb-3 text-muted-foreground">{day.subtitle}</p>
+        <h1 className="mb-1 text-3xl font-bold">{title}</h1>
+        <p className="mb-3 text-muted-foreground">{subtitle}</p>
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Clock className="size-4" /> {day.estimatedMinutes} min
@@ -84,7 +133,7 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
           Learning Objectives
         </h3>
         <ul className="space-y-1">
-          {day.objectives.map((obj, i) => (
+          {objectives.map((obj, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
               <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               {obj}
@@ -103,25 +152,32 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="theory">
+      <Tabs defaultValue="theory" key={activeTrack}>
         <TabsList className="mb-4 w-full justify-start">
           <TabsTrigger value="theory">Theory</TabsTrigger>
           <TabsTrigger value="exercises">Exercises ({totalExercises})</TabsTrigger>
-          <TabsTrigger value="flashcards">Flashcards ({day.flashcards.length})</TabsTrigger>
+          <TabsTrigger value="flashcards">Flashcards ({flashcards.length})</TabsTrigger>
           <TabsTrigger value="cheatsheet">Cheat Sheet</TabsTrigger>
         </TabsList>
 
         <TabsContent value="theory">
-          <TheoryRenderer sections={day.theory.sections} />
-          {!dayProgress.theoryCompleted && (
+          <TheoryRenderer sections={theory.sections} />
+          {!theoryCompleted && (
             <div className="mt-8 flex justify-center">
-              <Button onClick={() => markTheoryComplete(dayNumber)} size="lg">
+              <Button
+                onClick={() =>
+                  isTrackB
+                    ? markTheoryCompleteB(dayNumber)
+                    : markTheoryComplete(dayNumber)
+                }
+                size="lg"
+              >
                 <CheckCircle2 className="size-4" />
                 Mark Theory as Complete
               </Button>
             </div>
           )}
-          {dayProgress.theoryCompleted && (
+          {theoryCompleted && (
             <div className="mt-8 flex justify-center">
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle2 className="size-4" />
@@ -130,14 +186,13 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
             </div>
           )}
 
-          {/* Summary */}
-          {day.summary.length > 0 && (
+          {summary.length > 0 && (
             <div className="mt-8 rounded-lg border bg-muted/30 p-4">
               <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Summary
               </h3>
               <ul className="space-y-1">
-                {day.summary.map((s, i) => (
+                {summary.map((s, i) => (
                   <li key={i} className="text-sm">
                     <MathText text={`${'•'} ${s}`} />
                   </li>
@@ -148,18 +203,15 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
         </TabsContent>
 
         <TabsContent value="exercises">
-          <ExerciseRenderer
-            exercises={[...day.exercises, ...day.cumulativeExercises]}
-            dayNumber={dayNumber}
-          />
+          <ExerciseRenderer exercises={exercises} dayNumber={dayNumber} />
         </TabsContent>
 
         <TabsContent value="flashcards">
-          <FlashcardDeck cards={day.flashcards} dayNumber={dayNumber} />
+          <FlashcardDeck cards={flashcards} dayNumber={dayNumber} />
         </TabsContent>
 
         <TabsContent value="cheatsheet">
-          <CheatSheetTab entries={day.cheatSheet} />
+          <CheatSheetTab entries={cheatSheet} />
         </TabsContent>
       </Tabs>
 

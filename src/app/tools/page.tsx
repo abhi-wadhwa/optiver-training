@@ -13,6 +13,11 @@ import {
   Mountain,
   Store,
   Shield,
+  GitBranch,
+  Activity,
+  Layers,
+  Grid3X3,
+  ArrowLeftRight,
 } from 'lucide-react';
 
 const tools = [
@@ -87,6 +92,46 @@ const tools = [
       'Simulate discrete delta hedging of option positions. Compare hedging frequency effects with Monte Carlo analysis.',
     icon: <Shield className="h-5 w-5" />,
     tags: ['Hedging', 'Simulation'],
+  },
+  {
+    href: '/tools/bias-variance',
+    title: 'Bias-Variance Explorer',
+    description:
+      'Interactive polynomial fitting on noisy data with bias-variance decomposition. Visualize the classic U-shaped tradeoff.',
+    icon: <GitBranch className="h-5 w-5" />,
+    tags: ['Track B', 'Statistics'],
+  },
+  {
+    href: '/tools/garch-forecaster',
+    title: 'GARCH(1,1) Forecaster',
+    description:
+      'Simulate GARCH(1,1) volatility processes. Explore conditional variance dynamics and multi-step forecasts.',
+    icon: <Activity className="h-5 w-5" />,
+    tags: ['Track B', 'Volatility'],
+  },
+  {
+    href: '/tools/pca-vol-decomposition',
+    title: 'PCA Vol Decomposition',
+    description:
+      'Decompose a vol surface into principal components. Shock level, slope, and curvature modes interactively.',
+    icon: <Layers className="h-5 w-5" />,
+    tags: ['Track B', '3D', 'PCA'],
+  },
+  {
+    href: '/tools/ledoit-wolf',
+    title: 'Ledoit-Wolf Shrinkage',
+    description:
+      'Visualize covariance matrix shrinkage with side-by-side heatmaps. Compare conditioning of sample vs shrunk estimators.',
+    icon: <Grid3X3 className="h-5 w-5" />,
+    tags: ['Track B', 'Covariance'],
+  },
+  {
+    href: '/tools/lob-order-flow',
+    title: 'LOB Order Flow',
+    description:
+      'Animated limit order book simulator with real-time order flow imbalance, micro-price tracking, and trade tape.',
+    icon: <ArrowLeftRight className="h-5 w-5" />,
+    tags: ['Track B', 'Microstructure'],
   },
 ];
 

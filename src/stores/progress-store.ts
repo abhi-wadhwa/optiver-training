@@ -13,6 +13,7 @@ export interface ExerciseAttempt {
 
 export interface DayProgress {
   theoryCompleted: boolean;
+  theoryCompletedB: boolean;
   exerciseAttempts: Record<string, ExerciseAttempt[]>;
   flashcardsReviewed: string[];
   timedModeHighScore: number | null;
@@ -28,6 +29,7 @@ interface ProgressState {
   lastStudyDate: string | null;
 
   markTheoryComplete: (dayNumber: number) => void;
+  markTheoryCompleteB: (dayNumber: number) => void;
   recordAttempt: (dayNumber: number, attempt: ExerciseAttempt) => void;
   recordFlashcardReview: (dayNumber: number, flashcardId: string) => void;
   updateTimedHighScore: (dayNumber: number, score: number, time: number) => void;
@@ -37,6 +39,7 @@ interface ProgressState {
 
 export const EMPTY_DAY_PROGRESS: DayProgress = {
   theoryCompleted: false,
+  theoryCompletedB: false,
   exerciseAttempts: {},
   flashcardsReviewed: [],
   timedModeHighScore: null,
@@ -64,6 +67,18 @@ export const useProgressStore = create<ProgressState>()(
             [dayNumber]: {
               ...(state.days[dayNumber] ?? newDayProgress()),
               theoryCompleted: true,
+              lastAccessedAt: Date.now(),
+            },
+          },
+        })),
+
+      markTheoryCompleteB: (dayNumber) =>
+        set((state) => ({
+          days: {
+            ...state.days,
+            [dayNumber]: {
+              ...(state.days[dayNumber] ?? newDayProgress()),
+              theoryCompletedB: true,
               lastAccessedAt: Date.now(),
             },
           },

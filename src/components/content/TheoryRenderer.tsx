@@ -1,17 +1,58 @@
 'use client';
 
-import type { ContentBlock } from '@/content/types';
+import type { ContentBlock, InteractiveTool } from '@/content/types';
 import MathText from './MathText';
 import FormulaDisplay from './FormulaDisplay';
 import ExampleBlock from './ExampleBlock';
 import ConceptCard from './ConceptCard';
 import CalloutBox from './CalloutBox';
+import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 
 interface TheoryRendererProps {
   sections: {
     title: string;
     blocks: ContentBlock[];
   }[];
+}
+
+const toolRoutes: Record<InteractiveTool, string> = {
+  'bs-calculator': '/tools/bs-calculator',
+  'payoff-diagram': '/tools/payoff-builder',
+  'greek-visualizer': '/tools/greek-visualizer',
+  'vol-surface': '/tools/vol-surface',
+  'dice-game': '/tools/dice-game',
+  'market-maker': '/tools/market-maker',
+  'put-call-parity': '/tools/put-call-parity',
+  'delta-hedging': '/tools/delta-hedging',
+  'speed-drill': '/tools/speed-drill',
+  'bias-variance-explorer': '/tools/bias-variance',
+  'garch-forecaster': '/tools/garch-forecaster',
+  'pca-vol-decomposition': '/tools/pca-vol-decomposition',
+  'ledoit-wolf-shrinkage': '/tools/ledoit-wolf',
+  'lob-order-flow': '/tools/lob-order-flow',
+};
+
+function InlineToolBlock({ tool }: { tool: InteractiveTool }) {
+  const route = toolRoutes[tool];
+  return (
+    <div className="my-6 rounded-lg border bg-muted/20 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-medium">Interactive Tool: {tool}</span>
+        <Link
+          href={route}
+          className="flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          Open full-screen <ExternalLink className="size-3" />
+        </Link>
+      </div>
+      <div className="text-center text-xs text-muted-foreground">
+        <Link href={route} className="text-primary hover:underline">
+          Open the full interactive tool →
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 function ContentBlockRenderer({ block }: { block: ContentBlock }) {
@@ -70,11 +111,7 @@ function ContentBlockRenderer({ block }: { block: ContentBlock }) {
         </div>
       );
     case 'interactive':
-      return (
-        <div className="my-4 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Interactive tool: <span className="font-mono">{block.tool}</span>
-        </div>
-      );
+      return <InlineToolBlock tool={block.tool} />;
     default:
       return null;
   }

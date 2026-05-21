@@ -33,13 +33,24 @@ export function getDaysForWeek(week: 1 | 2): DayContent[] {
 
 export function getAllExercisesByTag(tag: string): Exercise[] {
   return allDays
-    .flatMap((d) => [...d.exercises, ...d.cumulativeExercises])
+    .flatMap((d) => [...d.exercises, ...d.cumulativeExercises, ...(d.trackB?.exercises ?? [])])
     .filter((e) => e.tags.includes(tag));
 }
 
 export function getTotalExerciseCount(): number {
   return allDays.reduce(
     (sum, d) => sum + d.exercises.length + d.cumulativeExercises.length,
+    0
+  );
+}
+
+export function getDaysWithTrackB(): DayContent[] {
+  return allDays.filter((d) => d.trackB != null);
+}
+
+export function getTotalTrackBExerciseCount(): number {
+  return allDays.reduce(
+    (sum, d) => sum + (d.trackB?.exercises.length ?? 0),
     0
   );
 }

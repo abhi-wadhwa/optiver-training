@@ -9,7 +9,12 @@ export type InteractiveTool =
   | 'market-maker'
   | 'put-call-parity'
   | 'delta-hedging'
-  | 'speed-drill';
+  | 'speed-drill'
+  | 'bias-variance-explorer'
+  | 'garch-forecaster'
+  | 'pca-vol-decomposition'
+  | 'ledoit-wolf-shrinkage'
+  | 'lob-order-flow';
 
 export type ContentBlock =
   | { type: 'text'; body: string }
@@ -124,6 +129,23 @@ export interface CheatSheetEntry {
   description: string;
 }
 
+export interface TrackBContent {
+  title: string;
+  subtitle: string;
+  objectives: string[];
+  theory: {
+    sections: {
+      title: string;
+      blocks: ContentBlock[];
+    }[];
+  };
+  exercises: Exercise[];
+  flashcards: Flashcard[];
+  cheatSheet: CheatSheetEntry[];
+  summary: string[];
+  interactiveTools: InteractiveTool[];
+}
+
 export interface DayContent {
   dayNumber: number;
   title: string;
@@ -145,4 +167,5 @@ export interface DayContent {
   interactiveTools: InteractiveTool[];
   cheatSheet: CheatSheetEntry[];
   summary: string[];
+  trackB?: TrackBContent;
 }
