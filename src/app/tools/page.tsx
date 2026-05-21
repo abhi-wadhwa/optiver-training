@@ -10,6 +10,9 @@ import {
   Dices,
   Scale,
   Zap,
+  Mountain,
+  Store,
+  Shield,
 } from 'lucide-react';
 
 const tools = [
@@ -60,6 +63,30 @@ const tools = [
       'Timed mental math drill with three difficulty levels. Warmup, Standard, and Natenberg-style options math.',
     icon: <Zap className="h-5 w-5" />,
     tags: ['Mental Math', 'Speed'],
+  },
+  {
+    href: '/tools/vol-surface',
+    title: 'Volatility Surface',
+    description:
+      'Interactive 3D volatility surface with parametric controls. Explore smile, skew, and term structure.',
+    icon: <Mountain className="h-5 w-5" />,
+    tags: ['Volatility', '3D'],
+  },
+  {
+    href: '/tools/market-maker',
+    title: 'Market Making Sim',
+    description:
+      'Practice quoting bid-ask spreads and managing inventory risk. Track P&L through simulated trading rounds.',
+    icon: <Store className="h-5 w-5" />,
+    tags: ['Trading', 'Market Making'],
+  },
+  {
+    href: '/tools/delta-hedging',
+    title: 'Delta Hedging Sim',
+    description:
+      'Simulate discrete delta hedging of option positions. Compare hedging frequency effects with Monte Carlo analysis.',
+    icon: <Shield className="h-5 w-5" />,
+    tags: ['Hedging', 'Simulation'],
   },
 ];
 
