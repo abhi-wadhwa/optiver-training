@@ -11,5 +11,10 @@ export default async function DayPage({
   params: Promise<{ dayNumber: string }>;
 }) {
   const { dayNumber } = await params;
-  return <DayPageLoader dayNumber={parseInt(dayNumber, 10)} />;
+  return (
+    <>
+      {/* build marker: v7-ssr-false */}
+      <DayPageLoader dayNumber={parseInt(dayNumber, 10)} />
+    </>
+  );
 }
