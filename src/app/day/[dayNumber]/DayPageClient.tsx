@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getDay, allDays } from '@/content/index';
-import { useProgressStore } from '@/stores/progress-store';
+import { useProgressStore, getDayProgress, getDayCompletionPercent, EMPTY_DAY_PROGRESS } from '@/stores/progress-store';
 import TheoryRenderer from '@/components/content/TheoryRenderer';
 import ExerciseRenderer from '@/components/exercises/ExerciseRenderer';
 import FlashcardDeck from '@/components/practice/FlashcardDeck';
@@ -28,8 +28,8 @@ import { useRef, useEffect, useState } from 'react';
 export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
   const day = getDay(dayNumber);
   const markTheoryComplete = useProgressStore((s) => s.markTheoryComplete);
-  const dayProgress = useProgressStore((s) => s.getDayProgress(dayNumber));
-  const getDayCompletionPercent = useProgressStore((s) => s.getDayCompletionPercent);
+  const days = useProgressStore((s) => s.days);
+  const dayProgress = getDayProgress(days, dayNumber);
 
   if (!day) {
     return (
@@ -46,7 +46,7 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
   }
 
   const totalExercises = day.exercises.length + day.cumulativeExercises.length;
-  const completionPercent = getDayCompletionPercent(dayNumber, totalExercises);
+  const completionPercent = getDayCompletionPercent(days, dayNumber, totalExercises);
   const prevDay = allDays.find((d) => d.dayNumber === dayNumber - 1);
   const nextDay = allDays.find((d) => d.dayNumber === dayNumber + 1);
 

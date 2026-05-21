@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useProgressStore } from '@/stores/progress-store';
+import { useProgressStore, getWeakTopics } from '@/stores/progress-store';
 import { getAllExercisesByTag, allDays } from '@/content/index';
 import ExerciseRenderer from '@/components/exercises/ExerciseRenderer';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import type { Exercise } from '@/content/types';
 
 export default function ReviewPage() {
-  const weakTopics = useProgressStore((s) => s.getWeakTopics());
+  const days = useProgressStore((s) => s.days);
+  const weakTopics = getWeakTopics(days);
 
   // Gather exercises from all days that match weak tags
   const weakExercises: Exercise[] = [];

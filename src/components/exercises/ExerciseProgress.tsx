@@ -1,6 +1,6 @@
 'use client';
 
-import { useProgressStore } from '@/stores/progress-store';
+import { useProgressStore, getDayProgress } from '@/stores/progress-store';
 import { Progress } from '@/components/ui/progress';
 import type { Exercise } from '@/content/types';
 
@@ -10,7 +10,8 @@ interface ExerciseProgressProps {
 }
 
 export default function ExerciseProgress({ exercises, dayNumber }: ExerciseProgressProps) {
-  const dayProgress = useProgressStore((s) => s.getDayProgress(dayNumber));
+  const days = useProgressStore((s) => s.days);
+  const dayProgress = getDayProgress(days, dayNumber);
 
   const completed = exercises.filter((ex) => {
     const attempts = dayProgress.exerciseAttempts[ex.id];

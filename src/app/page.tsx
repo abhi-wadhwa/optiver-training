@@ -1,7 +1,7 @@
 'use client';
 
 import { allDays, getDaysForWeek } from '@/content';
-import { useProgressStore } from '@/stores/progress-store';
+import { useProgressStore, getDayProgress, getDayCompletionPercent } from '@/stores/progress-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -10,7 +10,10 @@ import { Clock, Flame, Target, Trophy } from 'lucide-react';
 import type { DayContent } from '@/content/types';
 
 export default function Dashboard() {
-  const store = useProgressStore();
+  const days = useProgressStore((s) => s.days);
+  const totalStudyTimeSeconds = useProgressStore((s) => s.totalStudyTimeSeconds);
+  const currentStreak = useProgressStore((s) => s.currentStreak);
+  const longestStreak = useProgressStore((s) => s.longestStreak);
   const week1 = getDaysForWeek(1);
   const week2 = getDaysForWeek(2);
 
@@ -18,7 +21,7 @@ export default function Dashboard() {
     (sum, d) => sum + d.exercises.length + d.cumulativeExercises.length,
     0
   );
-  const completedExercises = Object.values(store.days).reduce((sum, day) => {
+  const completedExercises = Object.values(days).reduce((sum, day) => {
     return (
       sum +
       Object.values(day.exerciseAttempts).filter((attempts) =>
@@ -30,8 +33,8 @@ export default function Dashboard() {
   const overallProgress =
     totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
 
-  const hours = Math.floor(store.totalStudyTimeSeconds / 3600);
-  const minutes = Math.floor((store.totalStudyTimeSeconds % 3600) / 60);
+  const hours = Math.floor(totalStudyTimeSeconds / 3600);
+  const minutes = Math.floor((totalStudyTimeSeconds % 3600) / 60);
 
   return (
     <div className="space-y-8">
@@ -55,8 +58,8 @@ export default function Dashboard() {
         <StatCard
           icon={<Flame className="h-4 w-4" />}
           label="Current Streak"
-          value={`${store.currentStreak} days`}
-          sub={`Best: ${store.longestStreak} days`}
+          value={`${currentStreak} days`}
+          sub={`Best: ${longestStreak} days`}
         />
         <StatCard
           icon={<Clock className="h-4 w-4" />}
@@ -67,7 +70,7 @@ export default function Dashboard() {
         <StatCard
           icon={<Trophy className="h-4 w-4" />}
           label="Days Completed"
-          value={`${Object.values(store.days).filter((d) => d.theoryCompleted).length}/14`}
+          value={`${Object.values(days).filter((d) => d.theoryCompleted).length}/14`}
           sub="Theory sections read"
         />
       </div>
@@ -109,25 +112,26 @@ function StatCard({
 
 function WeekSection({
   title,
-  days,
+  days: weekDays,
 }: {
   title: string;
   days: DayContent[];
 }) {
-  const store = useProgressStore();
+  const storeDays = useProgressStore((s) => s.days);
 
   return (
     <div>
       <h2 className="mb-4 text-xl font-semibold">{title}</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {days.map((day) => {
-          const completion = store.getDayCompletionPercent(
+        {weekDays.map((day) => {
+          const completion = getDayCompletionPercent(
+            storeDays,
             day.dayNumber,
             day.exercises.length
           );
-          const dayProgress = store.getDayProgress(day.dayNumber);
+          const dayProg = getDayProgress(storeDays, day.dayNumber);
           const attemptedCount = Object.keys(
-            dayProgress.exerciseAttempts
+            dayProg.exerciseAttempts
           ).length;
 
           return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Flashcard } from '@/content/types';
-import { useProgressStore } from '@/stores/progress-store';
+import { useProgressStore, getDayProgress } from '@/stores/progress-store';
 import FlashcardCard from './FlashcardCard';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +27,8 @@ export default function FlashcardDeck({ cards, dayNumber }: FlashcardDeckProps) 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const recordFlashcardReview = useProgressStore((s) => s.recordFlashcardReview);
-  const dayProgress = useProgressStore((s) => s.getDayProgress(dayNumber));
+  const days = useProgressStore((s) => s.days);
+  const dayProgress = getDayProgress(days, dayNumber);
 
   const reviewed = dayProgress.flashcardsReviewed.length;
   const total = cards.length;

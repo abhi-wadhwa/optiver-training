@@ -33,26 +33,24 @@ interface ProgressState {
   updateTimedHighScore: (dayNumber: number, score: number, time: number) => void;
   addStudyTime: (seconds: number) => void;
   updateStreak: () => void;
-
-  getDayProgress: (dayNumber: number) => DayProgress;
-  getExerciseAccuracy: (dayNumber: number, exerciseId: string) => number | null;
-  getDayCompletionPercent: (dayNumber: number, totalExercises: number) => number;
-  getTopicAccuracy: (tag: string) => number | null;
-  getWeakTopics: () => { topic: string; accuracy: number }[];
 }
 
-const emptyDayProgress = (): DayProgress => ({
+export const EMPTY_DAY_PROGRESS: DayProgress = {
   theoryCompleted: false,
   exerciseAttempts: {},
   flashcardsReviewed: [],
   timedModeHighScore: null,
   timedModeBestTime: null,
   lastAccessedAt: 0,
-});
+};
+
+function newDayProgress(): DayProgress {
+  return { ...EMPTY_DAY_PROGRESS, exerciseAttempts: {}, flashcardsReviewed: [] };
+}
 
 export const useProgressStore = create<ProgressState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       days: {},
       totalStudyTimeSeconds: 0,
       currentStreak: 0,
@@ -64,7 +62,7 @@ export const useProgressStore = create<ProgressState>()(
           days: {
             ...state.days,
             [dayNumber]: {
-              ...(state.days[dayNumber] ?? emptyDayProgress()),
+              ...(state.days[dayNumber] ?? newDayProgress()),
               theoryCompleted: true,
               lastAccessedAt: Date.now(),
             },
@@ -73,7 +71,7 @@ export const useProgressStore = create<ProgressState>()(
 
       recordAttempt: (dayNumber, attempt) =>
         set((state) => {
-          const day = state.days[dayNumber] ?? emptyDayProgress();
+          const day = state.days[dayNumber] ?? newDayProgress();
           const existing = day.exerciseAttempts[attempt.exerciseId] ?? [];
           return {
             days: {
@@ -92,7 +90,7 @@ export const useProgressStore = create<ProgressState>()(
 
       recordFlashcardReview: (dayNumber, flashcardId) =>
         set((state) => {
-          const day = state.days[dayNumber] ?? emptyDayProgress();
+          const day = state.days[dayNumber] ?? newDayProgress();
           if (day.flashcardsReviewed.includes(flashcardId)) return state;
           return {
             days: {
@@ -108,7 +106,7 @@ export const useProgressStore = create<ProgressState>()(
 
       updateTimedHighScore: (dayNumber, score, time) =>
         set((state) => {
-          const day = state.days[dayNumber] ?? emptyDayProgress();
+          const day = state.days[dayNumber] ?? newDayProgress();
           return {
             days: {
               ...state.days,
@@ -150,75 +148,59 @@ export const useProgressStore = create<ProgressState>()(
             longestStreak: Math.max(state.longestStreak, newStreak),
           };
         }),
-
-      getDayProgress: (dayNumber) => {
-        return get().days[dayNumber] ?? emptyDayProgress();
-      },
-
-      getExerciseAccuracy: (dayNumber, exerciseId) => {
-        const day = get().days[dayNumber];
-        if (!day) return null;
-        const attempts = day.exerciseAttempts[exerciseId];
-        if (!attempts || attempts.length === 0) return null;
-        const correct = attempts.filter((a) => a.correct).length;
-        return correct / attempts.length;
-      },
-
-      getDayCompletionPercent: (dayNumber, totalExercises) => {
-        const day = get().days[dayNumber];
-        if (!day || totalExercises === 0) return 0;
-        const completedExercises = Object.values(day.exerciseAttempts).filter(
-          (attempts) => attempts.some((a) => a.correct)
-        ).length;
-        const theoryWeight = day.theoryCompleted ? 20 : 0;
-        const exerciseWeight = (completedExercises / totalExercises) * 80;
-        return Math.min(100, theoryWeight + exerciseWeight);
-      },
-
-      getTopicAccuracy: (tag) => {
-        const allAttempts: ExerciseAttempt[] = [];
-        const days = get().days;
-        for (const day of Object.values(days)) {
-          for (const attempts of Object.values(day.exerciseAttempts)) {
-            for (const a of attempts) {
-              if (a.exerciseId.includes(tag)) {
-                allAttempts.push(a);
-              }
-            }
-          }
-        }
-        if (allAttempts.length === 0) return null;
-        return allAttempts.filter((a) => a.correct).length / allAttempts.length;
-      },
-
-      getWeakTopics: () => {
-        const topicMap = new Map<string, { correct: number; total: number }>();
-        const days = get().days;
-        for (const day of Object.values(days)) {
-          for (const [id, attempts] of Object.entries(day.exerciseAttempts)) {
-            const parts = id.split('-');
-            const topic = parts.slice(1, -1).join('-');
-            if (!topic) continue;
-            const entry = topicMap.get(topic) ?? { correct: 0, total: 0 };
-            for (const a of attempts) {
-              entry.total++;
-              if (a.correct) entry.correct++;
-            }
-            topicMap.set(topic, entry);
-          }
-        }
-        return Array.from(topicMap.entries())
-          .map(([topic, { correct, total }]) => ({
-            topic,
-            accuracy: total > 0 ? correct / total : 0,
-          }))
-          .filter((t) => t.accuracy < 0.8)
-          .sort((a, b) => a.accuracy - b.accuracy);
-      },
     }),
     {
       name: 'optiver-training-progress',
-      skipHydration: true,
     }
   )
 );
+
+// --- Pure helper functions (not in the store, no infinite loops) ---
+
+export function getDayProgress(days: Record<number, DayProgress>, dayNumber: number): DayProgress {
+  return days[dayNumber] ?? EMPTY_DAY_PROGRESS;
+}
+
+export function getDayCompletionPercent(days: Record<number, DayProgress>, dayNumber: number, totalExercises: number): number {
+  const day = days[dayNumber];
+  if (!day || totalExercises === 0) return 0;
+  const completedExercises = Object.values(day.exerciseAttempts).filter(
+    (attempts) => attempts.some((a) => a.correct)
+  ).length;
+  const theoryWeight = day.theoryCompleted ? 20 : 0;
+  const exerciseWeight = (completedExercises / totalExercises) * 80;
+  return Math.min(100, theoryWeight + exerciseWeight);
+}
+
+export function getExerciseAccuracy(days: Record<number, DayProgress>, dayNumber: number, exerciseId: string): number | null {
+  const day = days[dayNumber];
+  if (!day) return null;
+  const attempts = day.exerciseAttempts[exerciseId];
+  if (!attempts || attempts.length === 0) return null;
+  const correct = attempts.filter((a) => a.correct).length;
+  return correct / attempts.length;
+}
+
+export function getWeakTopics(days: Record<number, DayProgress>): { topic: string; accuracy: number }[] {
+  const topicMap = new Map<string, { correct: number; total: number }>();
+  for (const day of Object.values(days)) {
+    for (const [id, attempts] of Object.entries(day.exerciseAttempts)) {
+      const parts = id.split('-');
+      const topic = parts.slice(1, -1).join('-');
+      if (!topic) continue;
+      const entry = topicMap.get(topic) ?? { correct: 0, total: 0 };
+      for (const a of attempts) {
+        entry.total++;
+        if (a.correct) entry.correct++;
+      }
+      topicMap.set(topic, entry);
+    }
+  }
+  return Array.from(topicMap.entries())
+    .map(([topic, { correct, total }]) => ({
+      topic,
+      accuracy: total > 0 ? correct / total : 0,
+    }))
+    .filter((t) => t.accuracy < 0.8)
+    .sort((a, b) => a.accuracy - b.accuracy);
+}

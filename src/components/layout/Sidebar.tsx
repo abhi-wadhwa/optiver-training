@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { allDays } from '@/content';
-import { useProgressStore } from '@/stores/progress-store';
+import { useProgressStore, getDayCompletionPercent } from '@/stores/progress-store';
 
 const WEEK_1_DAYS = [1, 2, 3, 4, 5, 6, 7];
 const WEEK_2_DAYS = [8, 9, 10, 11, 12, 13, 14];
@@ -23,7 +23,7 @@ const WEEK_2_DAYS = [8, 9, 10, 11, 12, 13, 14];
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const getDayCompletionPercent = useProgressStore((s) => s.getDayCompletionPercent);
+  const days = useProgressStore((s) => s.days);
 
   return (
     <aside
@@ -70,7 +70,7 @@ export function Sidebar() {
             {WEEK_1_DAYS.map((day) => {
               const content = allDays.find((d) => d.dayNumber === day);
               const completion = content
-                ? getDayCompletionPercent(day, content.exercises.length)
+                ? getDayCompletionPercent(days, day, content.exercises.length)
                 : 0;
               return (
                 <NavItem
@@ -99,7 +99,7 @@ export function Sidebar() {
             {WEEK_2_DAYS.map((day) => {
               const content = allDays.find((d) => d.dayNumber === day);
               const completion = content
-                ? getDayCompletionPercent(day, content.exercises.length)
+                ? getDayCompletionPercent(days, day, content.exercises.length)
                 : 0;
               return (
                 <NavItem
