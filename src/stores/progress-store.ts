@@ -218,6 +218,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: 'optiver-training-progress',
+      skipHydration: true,
     }
   )
 );
