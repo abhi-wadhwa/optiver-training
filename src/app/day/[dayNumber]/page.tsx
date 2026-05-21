@@ -1,5 +1,5 @@
 import { allDays } from '@/content/index';
-import DayPageClient from './DayPageClient';
+import DayPageLoader from './DayPageLoader';
 
 export function generateStaticParams() {
   return allDays.map((d) => ({ dayNumber: String(d.dayNumber) }));
@@ -11,5 +11,5 @@ export default async function DayPage({
   params: Promise<{ dayNumber: string }>;
 }) {
   const { dayNumber } = await params;
-  return <DayPageClient dayNumber={parseInt(dayNumber, 10)} />;
+  return <DayPageLoader dayNumber={parseInt(dayNumber, 10)} />;
 }
