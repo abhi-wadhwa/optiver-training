@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { getDay, allDays } from '@/content/index';
 import { useProgressStore } from '@/stores/progress-store';
 import TheoryRenderer from '@/components/content/TheoryRenderer';
@@ -22,13 +23,9 @@ import {
 } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 
-export default function DayPage({
-  params,
-}: {
-  params: Promise<{ dayNumber: string }>;
-}) {
-  const { dayNumber: dayNumStr } = React.use(params);
-  const dayNumber = parseInt(dayNumStr, 10);
+export default function DayPage() {
+  const params = useParams<{ dayNumber: string }>();
+  const dayNumber = parseInt(params.dayNumber, 10);
   const day = getDay(dayNumber);
   const markTheoryComplete = useProgressStore((s) => s.markTheoryComplete);
   const dayProgress = useProgressStore((s) => s.getDayProgress(dayNumber));
