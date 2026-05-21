@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect, useState } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
@@ -19,11 +20,9 @@ function renderLatex(latex: string, displayMode: boolean): string {
   }
 }
 
-export default function MathText({ text, className }: MathTextProps) {
-  // Split on display math ($$...$$) first, then inline math ($...$)
+function buildHtml(text: string): string {
   const parts: { type: 'text' | 'inline' | 'display'; content: string }[] = [];
 
-  // First pass: extract display math ($$...$$)
   const displayRegex = /\$\$([\s\S]*?)\$\$/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -40,7 +39,6 @@ export default function MathText({ text, className }: MathTextProps) {
     segments.push({ type: 'text', content: text.slice(lastIndex) });
   }
 
-  // Second pass: extract inline math ($...$) from text segments
   for (const seg of segments) {
     if (seg.type === 'display') {
       parts.push(seg);
@@ -61,25 +59,30 @@ export default function MathText({ text, className }: MathTextProps) {
     }
   }
 
-  const html = parts
+  return parts
     .map((part) => {
-      if (part.type === 'display') {
-        return renderLatex(part.content, true);
-      }
-      if (part.type === 'inline') {
-        return renderLatex(part.content, false);
-      }
-      // Render bold (**...**) and italics (single *...*) in text parts
+      if (part.type === 'display') return renderLatex(part.content, true);
+      if (part.type === 'inline') return renderLatex(part.content, false);
       return part.content
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*([^*]+)\*/g, '<em>$1</em>');
     })
     .join('');
+}
 
-  return (
-    <span
-      className={className}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+export default function MathText({ text, className }: MathTextProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && ref.current) {
+      ref.current.innerHTML = buildHtml(text);
+    }
+  }, [mounted, text]);
+
+  return <span ref={ref} className={className} suppressHydrationWarning />;
 }

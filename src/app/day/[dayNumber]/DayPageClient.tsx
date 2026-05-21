@@ -23,6 +23,7 @@ import {
 import 'katex/dist/katex.min.css';
 import type { CheatSheetEntry } from '@/content/types';
 import katex from 'katex';
+import { useRef, useEffect, useState } from 'react';
 
 export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
   const day = getDay(dayNumber);
@@ -189,6 +190,25 @@ export default function DayPageClient({ dayNumber }: { dayNumber: number }) {
   );
 }
 
+function FormulaCell({ formula }: { formula: string }) {
+  const ref = useRef<HTMLTableCellElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (mounted && ref.current) {
+      try {
+        ref.current.innerHTML = katex.renderToString(formula, {
+          throwOnError: false,
+          displayMode: false,
+        });
+      } catch {
+        ref.current.textContent = formula;
+      }
+    }
+  }, [mounted, formula]);
+  return <td ref={ref} className="px-4 py-3" suppressHydrationWarning />;
+}
+
 function CheatSheetTab({ entries }: { entries: CheatSheetEntry[] }) {
   if (entries.length === 0) {
     return (
@@ -209,29 +229,15 @@ function CheatSheetTab({ entries }: { entries: CheatSheetEntry[] }) {
           </tr>
         </thead>
         <tbody>
-          {entries.map((entry, i) => {
-            let formulaHtml: string;
-            try {
-              formulaHtml = katex.renderToString(entry.formula, {
-                throwOnError: false,
-                displayMode: false,
-              });
-            } catch {
-              formulaHtml = entry.formula;
-            }
-            return (
-              <tr key={i} className="border-b last:border-0">
-                <td className="px-4 py-3 font-medium">{entry.topic}</td>
-                <td
-                  className="px-4 py-3"
-                  dangerouslySetInnerHTML={{ __html: formulaHtml }}
-                />
-                <td className="px-4 py-3 text-muted-foreground">
-                  <MathText text={entry.description} />
-                </td>
-              </tr>
-            );
-          })}
+          {entries.map((entry, i) => (
+            <tr key={i} className="border-b last:border-0">
+              <td className="px-4 py-3 font-medium">{entry.topic}</td>
+              <FormulaCell formula={entry.formula} />
+              <td className="px-4 py-3 text-muted-foreground">
+                <MathText text={entry.description} />
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

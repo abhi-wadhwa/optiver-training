@@ -47,7 +47,7 @@ const emptyDayProgress = (): DayProgress => ({
   flashcardsReviewed: [],
   timedModeHighScore: null,
   timedModeBestTime: null,
-  lastAccessedAt: Date.now(),
+  lastAccessedAt: 0,
 });
 
 export const useProgressStore = create<ProgressState>()(
