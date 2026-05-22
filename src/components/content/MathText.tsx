@@ -48,10 +48,17 @@ function buildHtml(text: string): string {
     let inlineLastIndex = 0;
     let inlineMatch: RegExpExecArray | null;
     while ((inlineMatch = inlineRegex.exec(seg.content)) !== null) {
+      const inner = inlineMatch[1];
+      const startsWithDigit = /^\d/.test(inner);
+      const hasLatexCommands = /[\\{}^_]/.test(inner);
+      const looksLikeProse = /\b(?:the|is|at|in|of|a|an|and|or|for|to|that|this|with|from|are|was|has|not|but|if|on|by|as|it|be|no|so|do|we|he)\b/i.test(inner);
+      if (startsWithDigit && !hasLatexCommands && looksLikeProse) {
+        continue;
+      }
       if (inlineMatch.index > inlineLastIndex) {
         parts.push({ type: 'text', content: seg.content.slice(inlineLastIndex, inlineMatch.index) });
       }
-      parts.push({ type: 'inline', content: inlineMatch[1] });
+      parts.push({ type: 'inline', content: inner });
       inlineLastIndex = inlineRegex.lastIndex;
     }
     if (inlineLastIndex < seg.content.length) {
