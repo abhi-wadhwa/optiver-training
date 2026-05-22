@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface ExerciseAttempt {
   exerciseId: string;
@@ -49,6 +49,35 @@ export const EMPTY_DAY_PROGRESS: DayProgress = {
 
 function newDayProgress(): DayProgress {
   return { ...EMPTY_DAY_PROGRESS, exerciseAttempts: {}, flashcardsReviewed: [] };
+}
+
+let currentStorageKey = 'optiver-training-progress';
+
+function getUserStorage() {
+  return createJSONStorage(() => ({
+    getItem: (name: string) => {
+      if (typeof window === 'undefined') return null;
+      return localStorage.getItem(currentStorageKey) ?? localStorage.getItem(name);
+    },
+    setItem: (_name: string, value: string) => {
+      if (typeof window === 'undefined') return;
+      localStorage.setItem(currentStorageKey, value);
+    },
+    removeItem: (_name: string) => {
+      if (typeof window === 'undefined') return;
+      localStorage.removeItem(currentStorageKey);
+    },
+  }));
+}
+
+export function switchUserProgress(username: string | null) {
+  if (username) {
+    currentStorageKey = `optiver-training-progress-${username}`;
+  } else {
+    currentStorageKey = 'optiver-training-progress';
+  }
+  useProgressStore.persist.setOptions({ storage: getUserStorage() });
+  useProgressStore.persist.rehydrate();
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -166,6 +195,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: 'optiver-training-progress',
+      storage: getUserStorage(),
     }
   )
 );

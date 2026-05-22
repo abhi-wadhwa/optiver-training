@@ -9,13 +9,16 @@ import {
   ChevronRight,
   GraduationCap,
   LayoutDashboard,
+  LogOut,
   RefreshCw,
   Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { allDays } from '@/content';
 import { useProgressStore, getDayCompletionPercent } from '@/stores/progress-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 const WEEK_1_DAYS = [1, 2, 3, 4, 5, 6, 7];
 const WEEK_2_DAYS = [8, 9, 10, 11, 12, 13, 14];
@@ -24,6 +27,9 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const days = useProgressStore((s) => s.days);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const router = useRouter();
 
   return (
     <aside
@@ -143,6 +149,31 @@ export function Sidebar() {
             />
           </div>
         </nav>
+
+        {user && (
+          <div className="border-t border-border p-3">
+            {!collapsed ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium capitalize">{user}</span>
+                <button
+                  onClick={async () => { await logout(); router.replace('/login'); }}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <LogOut className="h-3 w-3" />
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={async () => { await logout(); router.replace('/login'); }}
+                className="flex w-full items-center justify-center rounded p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );
